@@ -1,13 +1,13 @@
-import * as React from 'react';
-import { useState } from 'react';
 import { css } from '@emotion/core';
 import styled from '@emotion/styled';
+import * as React from 'react';
+import { useState } from 'react';
 
 import logo from '../../assets/fuse-box-logo.svg';
-import hamburger from '../../assets/hamburger.svg';
 import github from '../../assets/github.svg';
+import hamburger from '../../assets/hamburger.svg';
 
-const navItemStyles = (props) => css`
+const navItemStyles = props => css`
   float: left;
   display: block;
   color: #f2f2f2;
@@ -41,17 +41,17 @@ const StyledLogoItem = styled('a')`
 `;
 
 const hamburgerStyles = css({
+  cursor: 'pointer',
   display: 'none',
-  width: '30px',
   height: '30px',
-  padding: '16px 13px 10px',
-  textAlign: 'center',
-  verticalAlign: 'middle',
   lineHeight: '0',
+  padding: '16px 13px 10px',
   position: 'absolute',
   right: 0,
+  textAlign: 'center',
   top: 0,
-  cursor: 'pointer'
+  verticalAlign: 'middle',
+  width: '30px'
 });
 
 const NavigationContainer = styled.div`
@@ -92,7 +92,7 @@ const NavigationContainer = styled.div`
   }
 `;
 
-const NavigationItem = ({ children, to, active, style }) => (
+const NavigationItem = ({ active, children, style, to }) => (
   <a css={navItemStyles({ active })} href={to} style={style}>
     {children}
   </a>
@@ -104,7 +104,7 @@ export const Header = () => {
   return (
     <NavigationContainer showNav={showNav}>
       <StyledLogoItem href='/'>
-        <img src={logo} alt='FuseBox Logo' height='100%' />
+        <img alt='FuseBox Logo' height='100%' src={logo} />
       </StyledLogoItem>
       <NavigationItem to='#news'>
         Documentation
@@ -115,14 +115,14 @@ export const Header = () => {
       <NavigationItem to='#about'>
         Release notes
       </NavigationItem>
-      <NavigationItem to='https://github.com/fuse-box/fuse-box' style={{ display: 'none' }}>
+      <NavigationItem style={{ display: 'none' }} to='https://github.com/fuse-box/fuse-box'>
         Github
       </NavigationItem>
-      <StyledLogoItem href='https://github.com/fuse-box/fuse-box' width='32px' float='right' className='github-logo'>
-        <img src={github} alt={`FuseBox's github`} />
+      <StyledLogoItem className='github-logo' float='right' href='https://github.com/fuse-box/fuse-box' width='32px'>
+        <img alt={`FuseBox's github`} src={github} />
       </StyledLogoItem>
-      <a css={hamburgerStyles} className='icon' onClick={() => updateShowNav(!showNav)}>
-        <img src={hamburger} alt='Show top navigation' />
+      <a className='icon' css={hamburgerStyles} onClick={() => updateShowNav(!showNav)}>
+        <img alt='Show top navigation' src={hamburger} />
       </a>
     </NavigationContainer>
   );

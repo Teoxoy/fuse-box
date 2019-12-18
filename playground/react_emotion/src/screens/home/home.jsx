@@ -2,17 +2,18 @@ import * as React from 'react';
 
 import { CssTests } from '../../components/cssTests';
 import { CustomCssTests } from '../../components/customCssTests';
-import { StyledExoticButton, CssExoticButton } from '../../components/exoticTests';
-import { StyledTests } from '../../components/styledTests';
 import { CustomStyledTests } from '../../components/customStyledTests';
+import { CssExoticButton, StyledExoticButton } from '../../components/exoticTests';
+import { StyledTests } from '../../components/styledTests';
 
-export const Home = () => (
+export const Home = ({ children }) => (
   <div style={{
     alignItems: 'stretch',
     flex: '1 0 auto',
     flexDirection: 'column',
     flexGrow: '1'
   }}>
+    {children}
     {/* <!-- Components that use the css fn --> */}
     <CssTests />
 

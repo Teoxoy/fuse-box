@@ -76,6 +76,7 @@ export function CSSInJSXTransformer(options?: CSSInJSXTransformerOptions): ITran
 
   const testPathRegex = path2RegexPattern(test);
   const emotionLibraries = [[emotionCoreAlias, 'emotion'], ['@emotion/styled']];
+  const reactLibrary = 'react';
 
   function renderAutoLabel(): ASTNode {
     return {
@@ -90,23 +91,6 @@ export function CSSInJSXTransformer(options?: CSSInJSXTransformerOptions): ITran
     };
   }
 
-  // Keep track of imported emotion functions.
-  // Allows us to look for custom imports
-  // import { css as emotionCss } from '@emotion/core'
-  const importedEmotionFunctions = [];
-  let needsInjection = true;
-  function isEmotionCall(node: ASTNode, index: string): boolean {
-    return (
-      // css('styles')
-      importedEmotionFunctions.indexOf(node[index].name) > -1 ||
-      // styled('obj')('styles')
-      importedEmotionFunctions.indexOf((node[index].callee && node[index].callee.name)) > -1 ||
-      // styled.div('div')
-      importedEmotionFunctions.indexOf((node[index].object && node[index].object.name)) > -1
-    );
-  }
-
-
   return {
     target: { test: testPathRegex },
     commonVisitors: ({ ctx, module }) => {
@@ -114,6 +98,27 @@ export function CSSInJSXTransformer(options?: CSSInJSXTransformerOptions): ITran
         typeof ctx.config.production === 'undefined' ||
         !ctx.config.production
       );
+
+      // Keep track of imported emotion functions.
+      // Allows us to look for custom imports
+      // import { css as emotionCss } from '@emotion/core'
+      const importedEmotionFunctions = [];
+      let needsInjection = true;
+
+      // Check if we're executing an emotion call in this file
+      function isEmotionCall(node: ASTNode, index: string): boolean {
+        return (
+          // css('styles')
+          importedEmotionFunctions.indexOf(node[index].name) > -1 ||
+          // styled('obj')('styles')
+          importedEmotionFunctions.indexOf((node[index].callee && node[index].callee.name)) > -1 ||
+          // styled.div('div')
+          importedEmotionFunctions.indexOf((node[index].object && node[index].object.name)) > -1
+        );
+      }
+
+      // @todo: fix this!!
+      const compilerJsxFactory = (ctx && ctx.tsConfig.compilerOptions.jsxFactory);
 
       // Process dirName and fileName only once per file
       const filePath = module.props.fuseBoxPath.replace(/\.([^.]+)$/, '');
@@ -200,16 +205,24 @@ export function CSSInJSXTransformer(options?: CSSInJSXTransformerOptions): ITran
         },
         onTopLevelTraverse: (visit: IVisit) => {
           const node = visit.node;
-          const globalContext = visit.globalContext as GlobalContext;
+          // const globalContext = visit.globalContext as GlobalContext;
           if (node.type === 'ImportDeclaration') {
+            if (compilerJsxFactory === 'jsx') {
+              // @todo:
+              // fix this, always insert if it's jsx
+            }
+
             if ([].concat(emotionLibraries[0], emotionLibraries[1]).indexOf(node.source.value) > -1) {
               const specifiersLength = node.specifiers.length;
               let i = 0;
               while (i < specifiersLength) {
                 if (node.specifiers[i].imported && node.specifiers[i].imported.name === 'jsx') {
                   needsInjection = false;
+                  // @todo:
+                  // fix this, remove specifier if compilerJsxFactory === 'jsx'
+
                   // set the globalContext.jsxFactory for the JSXTransformer
-                  globalContext.jsxFactory = node.specifiers[i].local.name;
+                  visit.globalContext.jsxFactory = node.specifiers[i].local.name;
                 } else {
                   importedEmotionFunctions.push(node.specifiers[i].local.name);
                 }
@@ -218,9 +231,10 @@ export function CSSInJSXTransformer(options?: CSSInJSXTransformerOptions): ITran
 
               if (autoInject && needsInjection && emotionLibraries[0].indexOf(node.source.value) > -1) {
                 needsInjection = false;
+
                 // set the globalContext.jsxFactory for the JSXTransformer
                 if (node.source.value === emotionCoreAlias) {
-                  globalContext.jsxFactory = jsxFactory;
+                  visit.globalContext.jsxFactory = jsxFactory;
                 }
                 node.specifiers.push({
                   imported: {

@@ -1,5 +1,6 @@
 import { Global, css } from '@emotion/core';
 import emotionNormalize from 'emotion-normalize';
+import * as React from 'react';
 
 const globalStyles = css`
   ${emotionNormalize}

@@ -7,7 +7,6 @@
     "importHelpers": true,
     "isolatedModules": false,
     "jsx": "react",
-    "jsxFactory": "jsx",
     "module": "commonjs",
     "moduleResolution": "node",
     "noEmitHelpers": true,

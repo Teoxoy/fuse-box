@@ -1,8 +1,8 @@
 import { ASTNode } from '../../interfaces/AST';
 
 import { IVisit, IVisitorMod } from '../../Visitor/Visitor';
-import { GlobalContext } from '../../program/GlobalContext';
 import { ITransformer } from '../../interfaces/ITransformer';
+import { GlobalContext } from '../../program/GlobalContext';
 
 //const Factories: { [key: string]: () => ASTNode } = {};
 
@@ -10,51 +10,51 @@ function createJSXFactory(props: { first: string; second?: string }): (args: Arr
   if (!props.second) {
     return (args: Array<ASTNode>): ASTNode => {
       return {
-        type: 'CallExpression',
-        callee: {
-          type: 'Identifier',
-          name: props.first,
-        },
         arguments: args,
+        callee: {
+          name: props.first,
+          type: 'Identifier',
+        },
+        type: 'CallExpression',
       };
     };
   }
   return (args: Array<ASTNode>): ASTNode => {
     return {
-      type: 'CallExpression',
-      callee: {
-        type: 'MemberExpression',
-        object: {
-          type: 'Identifier',
-          name: props.first,
-        },
-        computed: false,
-        property: {
-          type: 'Identifier',
-          name: props.second,
-        },
-      },
       arguments: args,
+      callee: {
+        computed: false,
+        object: {
+          name: props.first,
+          type: 'Identifier',
+        },
+        property: {
+          name: props.second,
+          type: 'Identifier',
+        },
+        type: 'MemberExpression',
+      },
+      type: 'CallExpression',
     };
   };
 }
 
 function createObjectAssignExpression(): ASTNode {
   return {
-    type: 'CallExpression',
-    callee: {
-      type: 'MemberExpression',
-      object: {
-        type: 'Identifier',
-        name: 'Object',
-      },
-      computed: false,
-      property: {
-        type: 'Identifier',
-        name: 'assign',
-      },
-    },
     arguments: [],
+    callee: {
+      computed: false,
+      object: {
+        name: 'Object',
+        type: 'Identifier',
+      },
+      property: {
+        name: 'assign',
+        type: 'Identifier',
+      },
+      type: 'MemberExpression',
+    },
+    type: 'CallExpression',
   };
 }
 
@@ -65,16 +65,16 @@ export interface IJSXTranformerOptions {
 function parseFactory(factory: string) {
   const [first, second] = factory.split('.');
   const JSXFragment: ASTNode = {
-    type: 'MemberExpression',
-    object: {
-      type: 'Identifier',
-      name: first,
-    },
     computed: false,
-    property: {
+    object: {
+      name: first,
       type: 'Identifier',
-      name: 'Fragment',
     },
+    property: {
+      name: 'Fragment',
+      type: 'Identifier',
+    },
+    type: 'MemberExpression',
   };
 
   const createElement = createJSXFactory({ first, second });
@@ -88,7 +88,7 @@ export function JSXTransformer(): ITransformer {
     commonVisitors: props => {
       if (props.module.props.extension === '.ts') return;
       const defaultFactory = 'React.createElement';
-      const jsxFactory = props.ctx ? props.ctx.tsConfig.compilerOptions.jsxFactory || defaultFactory : defaultFactory;
+      const jsxFactory = (props.ctx && props.ctx.tsConfig.compilerOptions.jsxFactory) || defaultFactory;
       // we don't need that for normal TypeScript files
       return {
         onEachNode: (visit: IVisit): IVisitorMod => {
@@ -97,28 +97,12 @@ export function JSXTransformer(): ITransformer {
           const globalContext = visit.globalContext as GlobalContext;
 
           const factory = globalContext.jsxFactory || jsxFactory;
+
           if (!FACTORIES[factory]) FACTORIES[factory] = parseFactory(factory);
 
           const { JSXFragment, createElement } = FACTORIES[factory];
 
           switch (node.type) {
-            case 'JSXMemberExpression':
-              node.type = 'MemberExpression';
-              // it's important to replace it, since it will be re-visited and picked up by other transformers
-              // for example Import transformer
-              return { replaceWith: node };
-            case 'JSXIdentifier':
-              if (name[0] === name[0].toLowerCase()) {
-                return { replaceWith: { type: 'Literal', value: name } };
-              }
-              node.type = 'Identifier';
-              return { replaceWith: node };
-            case 'JSXFragment':
-              return {
-                replaceWith: createElement(
-                  [JSXFragment, { type: 'Literal', value: null } as ASTNode].concat(node.children),
-                ),
-              };
             case 'JSXElement':
               let props: ASTNode;
               let propObjects: Array<ASTNode> = [];
@@ -140,23 +124,23 @@ export function JSXTransformer(): ITransformer {
                   if (attr.name.name.indexOf('-') > -1) {
                     key = { type: 'Literal', value: attr.name.name };
                   } else {
-                    key = { type: 'Identifier', name: attr.name.name };
+                    key = { name: attr.name.name, type: 'Identifier' };
                   }
 
                   const createdProp: ASTNode = {
-                    type: 'Property',
-                    key: key,
-                    value: value,
-                    kind: 'init',
                     computed: false,
+                    key: key,
+                    kind: 'init',
                     method: false,
                     shorthand: false,
+                    type: 'Property',
+                    value: value,
                   };
 
                   if (newObj) {
                     propObject = {
-                      type: 'ObjectExpression',
                       properties: [createdProp],
+                      type: 'ObjectExpression',
                     };
                     newObj = false;
                   } else {
@@ -169,8 +153,8 @@ export function JSXTransformer(): ITransformer {
                   if (propObject) propObjects.push(propObject);
                   else
                     propObjects.push({
-                      type: 'ObjectExpression',
                       properties: [],
+                      type: 'ObjectExpression',
                     });
                   newObj = true;
                   propObjects.push(attr.argument);
@@ -188,10 +172,27 @@ export function JSXTransformer(): ITransformer {
               return {
                 replaceWith: createElement([openingElement.name, props].concat(node.children)),
               };
-            case 'JSXSpreadChild':
             case 'JSXExpressionContainer':
+            case 'JSXSpreadChild':
               if (node.expression.type === 'JSXEmptyExpression') return { removeNode: true };
               return { replaceWith: node.expression };
+            case 'JSXFragment':
+              return {
+                replaceWith: createElement(
+                  [JSXFragment, { type: 'Literal', value: null } as ASTNode].concat(node.children),
+                ),
+              };
+            case 'JSXIdentifier':
+              if (name[0] === name[0].toLowerCase()) {
+                return { replaceWith: { type: 'Literal', value: name } };
+              }
+              node.type = 'Identifier';
+              return { replaceWith: node };
+            case 'JSXMemberExpression':
+              node.type = 'MemberExpression';
+              // it's important to replace it, since it will be re-visited and picked up by other transformers
+              // for example Import transformer
+              return { replaceWith: node };
             case 'JSXText':
               if (node.value.indexOf('\n') > -1 && !node.value.trim()) {
                 return { removeNode: true };
