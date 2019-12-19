@@ -21,10 +21,12 @@ import { EnumTransformer } from './transformers/ts/EnumTransformer';
 import { NamespaceTransformer } from './transformers/ts/NameSpaceTransformer';
 import { DecoratorTransformer } from './transformers/ts/decorators/DecoratorTransformer';
 
+import { PRODUCTION_TRANSFORMERS } from '../production/transformers';
+
 /**
  * Order of those transformers MATTER!
  */
-const BASE_TRANSFORMERS: Array<ITransformer> = [
+export const BASE_TRANSFORMERS: Array<ITransformer> = [
   // this should always come first
   GlobalContextTransformer(),
 
