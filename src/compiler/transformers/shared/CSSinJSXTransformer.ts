@@ -1,8 +1,8 @@
 import { path2RegexPattern } from '../../../utils/utils';
 import { IVisit } from '../../Visitor/Visitor';
 import { ASTNode } from '../../interfaces/AST';
+import { ITransformer } from '../../interfaces/ITransformer';
 import { GlobalContext } from '../../program/GlobalContext';
-import { ITransformer } from '../../program/transpileModule';
 
 export interface CSSInJSXTransformerOptions {
   autoInject?: boolean;
@@ -76,7 +76,7 @@ export function CSSInJSXTransformer(options?: CSSInJSXTransformerOptions): ITran
 
   const testPathRegex = path2RegexPattern(test);
   const emotionLibraries = [[emotionCoreAlias, 'emotion'], ['@emotion/styled']];
-  const reactLibrary = 'react';
+  // const reactLibrary = 'react';
 
   function renderAutoLabel(): ASTNode {
     return {
@@ -205,7 +205,7 @@ export function CSSInJSXTransformer(options?: CSSInJSXTransformerOptions): ITran
         },
         onTopLevelTraverse: (visit: IVisit) => {
           const node = visit.node;
-          // const globalContext = visit.globalContext as GlobalContext;
+          const globalContext = visit.globalContext as GlobalContext;
           if (node.type === 'ImportDeclaration') {
             if (compilerJsxFactory === 'jsx') {
               // @todo:
@@ -222,7 +222,7 @@ export function CSSInJSXTransformer(options?: CSSInJSXTransformerOptions): ITran
                   // fix this, remove specifier if compilerJsxFactory === 'jsx'
 
                   // set the globalContext.jsxFactory for the JSXTransformer
-                  visit.globalContext.jsxFactory = node.specifiers[i].local.name;
+                  globalContext.jsxFactory = node.specifiers[i].local.name;
                 } else {
                   importedEmotionFunctions.push(node.specifiers[i].local.name);
                 }
@@ -234,7 +234,7 @@ export function CSSInJSXTransformer(options?: CSSInJSXTransformerOptions): ITran
 
                 // set the globalContext.jsxFactory for the JSXTransformer
                 if (node.source.value === emotionCoreAlias) {
-                  visit.globalContext.jsxFactory = jsxFactory;
+                  globalContext.jsxFactory = jsxFactory;
                 }
                 node.specifiers.push({
                   imported: {
