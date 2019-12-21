@@ -6,4 +6,4 @@ export function LazyButton() {
   );
 };
 
-export default null;
+export default LazyButton;

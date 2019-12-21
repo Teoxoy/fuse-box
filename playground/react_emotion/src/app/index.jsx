@@ -7,7 +7,7 @@ import { Header } from '../components/header';
 import { Home } from '../screens/home';
 import { GlobalStyle } from '../theme/fuse';
 
-const { LazyButton } = () => import('../components/lazyButton');
+// const { LazyButton } = () => import('../components/lazyButton');
 
 const styles1 = css({
   backgroundColor: 'hotpink'
@@ -25,7 +25,7 @@ export const App = () => (
       <div css={css`background-color: hotpink; color:white;`}>Super Duper</div>
       <div css={[styles1, styles2]}>Super Duper</div>
       <div css={{ backgroundColor: 'hotpink', color: 'white' }}>Super Duper</div>
-      <LazyButton />
+      {/* <LazyButton /> */}
     </Home>
     <Footer />
   </Fragment>
