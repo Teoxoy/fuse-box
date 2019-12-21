@@ -1,11 +1,13 @@
 import { css } from '@emotion/core';
-import { Fragment } from 'react';
-import * as React from 'react';
+
+import React, { Fragment } from 'react';
 
 import { Footer } from '../components/footer';
 import { Header } from '../components/header';
 import { Home } from '../screens/home';
 import { GlobalStyle } from '../theme/fuse';
+
+import './direct';
 
 // const { LazyButton } = () => import('../components/lazyButton');
 
